@@ -1,6 +1,9 @@
 {
   "framework": null,
   "installCommand": "bun install",
+  "rewrites": [
+    { "source": "/restaurants", "destination": "/api/restaurants" }
+  ],
   "functions": {
     "api/scrape.ts": {
       "maxDuration": 300

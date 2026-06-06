@@ -398,7 +398,7 @@
     async function loadRestaurants() {
       const grid = document.getElementById('cards');
       try {
-        const res = await fetch('/api/restaurants');
+        const res = await fetch('/restaurants');
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const { restaurants, error } = await res.json();
         if (error) throw new Error(error);
