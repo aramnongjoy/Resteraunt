@@ -1,5 +1,6 @@
 {
   "framework": null,
+  "buildCommand": "echo 'static'",
   "outputDirectory": "public",
   "installCommand": "bun install",
   "functions": {

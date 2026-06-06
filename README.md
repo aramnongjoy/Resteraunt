@@ -1,15 +1,6 @@
-# Elysia with Bun runtime
+# Google Sheet
+https://docs.google.com/spreadsheets/d/1NXfQHnETcvq1attmtpMr-BO_AFBO7kO9ywZdEcvrju8/edit?gid=1544303816#gid=1544303816
 
-## Getting Started
-To get started with this template, simply paste this command into your terminal:
-```bash
-bun create elysia ./elysia-example
-```
+# Vercel
+https://resteraunt.vercel.app/
 
-## Development
-To start the development server run:
-```bash
-bun run dev
-```
-
-Open http://localhost:3000/ with your browser to see the result.
