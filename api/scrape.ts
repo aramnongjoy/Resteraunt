@@ -1,4 +1,4 @@
-import { scrapeAndSave } from "../src/scraper";
+import { scrapeAndSave } from "../src/scraper.js";
 
 export const maxDuration = 300;
 
