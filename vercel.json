@@ -2,5 +2,10 @@
   "framework": null,
   "buildCommand": "bun run scripts/generate.ts",
   "outputDirectory": "public",
-  "installCommand": "bun install"
+  "installCommand": "bun install",
+  "functions": {
+    "api/scrape.ts": {
+      "maxDuration": 300
+    }
+  }
 }

@@ -277,15 +277,21 @@ export async function scrapeAndSave() {
   const allRestaurants: Restaurant[] = [];
   const seen = new Set<string>();
 
-  for (const location of LOCATIONS) {
-    const items = await runApifyScraper(client, location);
-    for (const item of items) {
+  const results = await Promise.allSettled(
+    LOCATIONS.map((location) => runApifyScraper(client, location))
+  );
+
+  for (const result of results) {
+    if (result.status === "rejected") {
+      console.warn("⚠️  ดึงข้อมูลล้มเหลว:", result.reason);
+      continue;
+    }
+    for (const item of result.value) {
       if (item.ชื่อร้าน && !seen.has(item.ชื่อร้าน)) {
         seen.add(item.ชื่อร้าน);
         allRestaurants.push(item);
       }
     }
-    await Bun.sleep(1500);
   }
 
   console.log(`\n📊 รวมทั้งหมด: ${allRestaurants.length} ร้าน (ไม่ซ้ำ)`);
