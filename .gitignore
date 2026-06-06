@@ -33,6 +33,10 @@ yarn-error.log*
 # vercel
 .vercel
 
+# secrets
+.env
+service_account.json
+
 **/*.trace
 **/*.zip
 **/*.tar.gz

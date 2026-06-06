@@ -6,7 +6,11 @@
     "dev": "bun run --watch src/index.ts"
   },
   "dependencies": {
-    "elysia": "latest"
+    "@sinclair/typebox": "^0.34.49",
+    "apify-client": "^2.23.3",
+    "elysia": "^1.4.28",
+    "google-auth-library": "^10.6.2",
+    "googleapis": "^173.0.0"
   },
   "devDependencies": {
     "bun-types": "latest"
