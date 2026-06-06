@@ -1,4 +1,5 @@
 {
+  "framework": null,
   "outputDirectory": "public",
   "installCommand": "bun install",
   "functions": {
