@@ -1,26 +1,32 @@
+import type { IncomingMessage, ServerResponse } from "http";
 import { scrapeAndSave } from "../src/scraper.js";
 
 export const maxDuration = 300;
 
-export default async function handler(req: Request): Promise<Response> {
+function json(res: ServerResponse, status: number, body: unknown) {
+  res.writeHead(status, { "Content-Type": "application/json" });
+  res.end(JSON.stringify(body));
+}
+
+export default async function handler(req: IncomingMessage, res: ServerResponse) {
   if (req.method !== "POST") {
-    return Response.json({ error: "Method not allowed" }, { status: 405 });
+    return json(res, 405, { error: "Method not allowed" });
   }
 
-  const secret = req.headers.get("x-scrape-secret");
+  const secret = req.headers["x-scrape-secret"];
   if (process.env.SCRAPE_SECRET && secret !== process.env.SCRAPE_SECRET) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+    return json(res, 401, { error: "Unauthorized" });
   }
 
   try {
     const result = await scrapeAndSave();
-    return Response.json({
+    json(res, 200, {
       success: true,
       totalRestaurants: result.total,
       breakdown: result.breakdown,
       sheetUrl: `https://docs.google.com/spreadsheets/d/${process.env.GOOGLE_SHEET_ID}`,
     });
   } catch (err: any) {
-    return Response.json({ success: false, error: err.message }, { status: 500 });
+    json(res, 500, { success: false, error: err.message });
   }
 }
