@@ -33,6 +33,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# generated static output
+/public
+
 # secrets
 .env
 service_account.json

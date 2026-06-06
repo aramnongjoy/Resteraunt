@@ -1,0 +1,6 @@
+{
+  "framework": null,
+  "buildCommand": "bun run scripts/generate.ts",
+  "outputDirectory": "public",
+  "installCommand": "bun install"
+}
