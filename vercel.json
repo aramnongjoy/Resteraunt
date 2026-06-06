@@ -1,11 +1,12 @@
 {
-  "framework": null,
-  "buildCommand": "bun run scripts/generate.ts",
   "outputDirectory": "public",
   "installCommand": "bun install",
   "functions": {
     "api/scrape.ts": {
       "maxDuration": 300
+    },
+    "api/restaurants.ts": {
+      "maxDuration": 30
     }
   }
 }
