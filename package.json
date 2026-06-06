@@ -4,7 +4,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "bun run --watch src/index.ts",
-    "generate": "bun run scripts/generate.ts"
+    "generate": "bun run scripts/generate.ts",
+    "scrape": "bun scripts/scrape.ts"
   },
   "dependencies": {
     "@sinclair/typebox": "^0.34.49",
