@@ -1,6 +1,6 @@
 import { Elysia } from "elysia";
 import { readFileSync } from "fs";
-import { scrapeAndSave, getTopRestaurants, type Restaurant } from "./scraper";
+import { scrapeAndSave, getTopRestaurants, getAllRestaurants, type Restaurant } from "./scraper";
 
 // ── HTML helpers ──────────────────────────────────────────────
 
@@ -121,6 +121,42 @@ const app = new Elysia()
       set.status = 500;
       return { success: false, error: err.message };
     }
+  })
+
+  // ── Routes for index2.html (mirrors Vercel API paths) ────────
+  .get("/all-restaurants", async ({ set }) => {
+    try {
+      const restaurants = await getAllRestaurants();
+      const areas = ["ทองหล่อ", "พร้อมพงศ์", "สยาม", "อารีย์", "อโศก"];
+      const breakdown: Record<string, number> = {};
+      areas.forEach((a) => {
+        breakdown[a] = restaurants.filter((r) => r.พื้นที่ === a).length;
+      });
+      return { restaurants, total: restaurants.length, breakdown };
+    } catch (err: any) {
+      set.status = 500;
+      return { error: err.message };
+    }
+  })
+
+  .post("/api/scrape", async ({ set }) => {
+    try {
+      const result = await scrapeAndSave();
+      return {
+        success: true,
+        totalRestaurants: result.total,
+        breakdown: result.breakdown,
+        sheetUrl: `https://docs.google.com/spreadsheets/d/${process.env.GOOGLE_SHEET_ID}`,
+      };
+    } catch (err: any) {
+      set.status = 500;
+      return { success: false, error: err.message };
+    }
+  })
+
+  .get("/index2", ({ set }) => {
+    set.headers["content-type"] = "text/html; charset=utf-8";
+    return readFileSync("index2.html", "utf-8");
   })
 
   .listen(9145);

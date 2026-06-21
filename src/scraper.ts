@@ -233,16 +233,16 @@ async function writeToSheet(restaurants: Restaurant[]): Promise<void> {
   console.log(`\n✅ เขียน ${restaurants.length} ร้านลง Google Sheets สำเร็จ`);
 }
 
-// ── Top restaurants for result page ──────────────────────────
+// ── Shared sheet reader ───────────────────────────────────────
 
-export async function getTopRestaurants(limit = 3): Promise<Restaurant[]> {
+async function readAllFromSheet(): Promise<Restaurant[]> {
   const sheetId = process.env.GOOGLE_SHEET_ID;
   if (!sheetId) throw new Error("GOOGLE_SHEET_ID ไม่ได้ตั้งค่า");
 
   const sheets = await getSheetsClient();
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: sheetId,
-    range: `${SHEET_TAB_NAME}!A1:L`,
+    range: `${SHEET_TAB_NAME}!A1:N`,
   });
 
   const rows = (res.data.values ?? []) as string[][];
@@ -260,8 +260,19 @@ export async function getTopRestaurants(limit = 3): Promise<Restaurant[]> {
     .sort((a, b) => {
       const sd = Number(b.คะแนนรีวิว || 0) - Number(a.คะแนนรีวิว || 0);
       return sd !== 0 ? sd : Number(b.จำนวนรีวิว || 0) - Number(a.จำนวนรีวิว || 0);
-    })
-    .slice(0, limit);
+    });
+}
+
+// ── Top restaurants for result page ──────────────────────────
+
+export async function getTopRestaurants(limit = 3): Promise<Restaurant[]> {
+  return (await readAllFromSheet()).slice(0, limit);
+}
+
+// ── All restaurants for index2 picker ────────────────────────
+
+export async function getAllRestaurants(): Promise<Restaurant[]> {
+  return readAllFromSheet();
 }
 
 // ── Main export ───────────────────────────────────────────────

@@ -2,13 +2,17 @@
   "framework": null,
   "installCommand": "bun install",
   "rewrites": [
-    { "source": "/restaurants", "destination": "/api/restaurants" }
+    { "source": "/restaurants", "destination": "/api/restaurants" },
+    { "source": "/all-restaurants", "destination": "/api/all-restaurants" }
   ],
   "functions": {
     "api/scrape.ts": {
       "maxDuration": 300
     },
     "api/restaurants.ts": {
+      "maxDuration": 30
+    },
+    "api/all-restaurants.ts": {
       "maxDuration": 30
     }
   }
