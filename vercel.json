@@ -15,6 +15,9 @@
     },
     "api/all-restaurants.ts": {
       "maxDuration": 30
+    },
+    "api/ask.ts": {
+      "maxDuration": 30
     }
   }
 }
