@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Restaurant Picker — เลือกร้านสำหรับทีม</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #070c1a;
+      --bg2:       #0d1428;
+      --card:      #111e33;
+      --card2:     #182540;
+      --border:    rgba(100,160,255,0.10);
+      --border2:   rgba(100,160,255,0.20);
+      --accent:    #0ecf96;
+      --accent2:   #6c63ff;
+      --gold:      #f5c518;
+      --danger:    #ff5370;
+      --warning:   #fb923c;
+      --text:      #dde8f8;
+      --text2:     #7a97c2;
+      --text3:     #3a5070;
+      --badge-bg:  rgba(14,207,150,0.12);
+      --badge-border: rgba(14,207,150,0.30);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Sarabun', sans-serif;
+      min-height: 100vh;
+      font-size: 15px;
+      line-height: 1.65;
+    }
+
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg2); }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+    /* ── NAVBAR ── */
+    .navbar {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(7,12,26,0.92);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 1.5rem;
+    }
+    .nav-inner {
+      max-width: 1200px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 58px; gap: 1rem;
+    }
+    .nav-brand {
+      display: flex; align-items: center; gap: 0.55rem;
+      font-weight: 700; font-size: 1.05rem; color: var(--text);
+      text-decoration: none;
+    }
+    .nav-brand-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 10px var(--accent);
+    }
+    .nav-right { display: flex; align-items: center; gap: 0.5rem; }
+    .nav-date { font-size: 0.75rem; color: var(--text3); }
+
+    /* ── BUTTONS ── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      border: none; border-radius: 8px; cursor: pointer;
+      font-family: 'Sarabun', sans-serif; font-weight: 600; font-size: 0.875rem;
+      padding: 0.5rem 1rem; transition: all 0.15s;
+    }
+    .btn-icon {
+      background: transparent; border: 1px solid var(--border);
+      color: var(--text2); border-radius: 8px; cursor: pointer;
+      padding: 0.4rem 0.65rem; font-size: 1rem; transition: all 0.15s;
+    }
+    .btn-icon:hover { border-color: var(--border2); color: var(--text); background: var(--card); }
+    .btn-accent { background: var(--accent); color: #061020; }
+    .btn-accent:hover { filter: brightness(1.1); box-shadow: 0 0 20px rgba(14,207,150,0.35); }
+    .btn-secondary { background: var(--card2); color: var(--text); border: 1px solid var(--border2); }
+    .btn-secondary:hover { background: var(--card); border-color: var(--accent); color: var(--accent); }
+    .btn-outline { background: transparent; color: var(--accent); border: 1px solid rgba(14,207,150,0.4); }
+    .btn-outline:hover { background: rgba(14,207,150,0.08); }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-danger:hover { filter: brightness(1.1); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ── CONTAINER ── */
+    .container { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+
+    /* ── SECTION ── */
+    .section { margin-bottom: 2.5rem; }
+    .section-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 1.25rem; gap: 1rem;
+    }
+    .section-title {
+      font-size: 1.1rem; font-weight: 700; color: var(--text);
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .section-title-icon { font-size: 1.15rem; }
+    .section-meta { font-size: 0.8rem; color: var(--text3); }
+
+    /* ── BADGE ── */
+    .badge {
+      display: inline-flex; align-items: center; gap: 0.35rem;
+      background: var(--badge-bg); color: var(--accent);
+      border: 1px solid var(--badge-border); border-radius: 99px;
+      font-size: 0.75rem; font-weight: 600; padding: 0.25rem 0.75rem;
+    }
+    .badge-warn { background: rgba(245,197,24,0.1); color: var(--gold); border-color: rgba(245,197,24,0.3); }
+    .badge-dim { background: rgba(100,160,255,0.06); color: var(--text2); border-color: var(--border); }
+
+    /* ── AREA STATS ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 0.75rem;
+    }
+    .stat-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 1rem 1.1rem;
+      display: flex; flex-direction: column; gap: 0.25rem;
+      transition: border-color 0.2s;
+    }
+    .stat-card:hover { border-color: var(--border2); }
+    .stat-area { font-size: 0.78rem; color: var(--text2); font-weight: 500; }
+    .stat-count { font-size: 1.9rem; font-weight: 700; color: var(--text); line-height: 1; }
+    .stat-label { font-size: 0.7rem; color: var(--text3); }
+    .stat-bar { margin-top: 0.5rem; height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+    .stat-bar-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.8s ease; }
+
+    /* ── SETTINGS PANEL ── */
+    .settings-panel {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 14px; overflow: hidden;
+      transition: all 0.3s ease;
+    }
+    .settings-panel.collapsed .settings-body { display: none; }
+    .settings-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 1.25rem; cursor: pointer; user-select: none;
+    }
+    .settings-head:hover { background: var(--card2); }
+    .settings-head-left { display: flex; align-items: center; gap: 0.5rem; font-weight: 600; font-size: 0.9rem; }
+    .settings-chevron { transition: transform 0.3s; color: var(--text2); font-size: 0.75rem; }
+    .settings-panel.collapsed .settings-chevron { transform: rotate(-90deg); }
+    .settings-body { padding: 0 1.25rem 1.25rem; border-top: 1px solid var(--border); }
+    .settings-row {
+      display: flex; flex-wrap: wrap; gap: 1.5rem; padding-top: 1.25rem;
+    }
+    .settings-group { display: flex; flex-direction: column; gap: 0.6rem; }
+    .settings-label { font-size: 0.75rem; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.05em; }
+
+    .scenario-btns { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .scenario-btn {
+      background: var(--card2); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text2);
+      font-family: 'Sarabun', sans-serif; font-size: 0.85rem; font-weight: 500;
+      padding: 0.45rem 0.85rem; cursor: pointer; transition: all 0.15s;
+    }
+    .scenario-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .scenario-btn.active {
+      background: rgba(14,207,150,0.15); border-color: var(--accent);
+      color: var(--accent); font-weight: 700;
+    }
+
+    .group-stepper { display: flex; align-items: center; gap: 0.75rem; }
+    .group-stepper button {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: var(--card2); border: 1px solid var(--border2);
+      color: var(--text); font-size: 1.2rem; font-weight: 600;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s;
+    }
+    .group-stepper button:hover { border-color: var(--accent); color: var(--accent); }
+    .group-stepper button:disabled { opacity: 0.3; cursor: not-allowed; }
+    .group-size-val { font-size: 1.5rem; font-weight: 700; min-width: 2rem; text-align: center; }
+
+    .settings-input {
+      background: var(--card2); border: 1px solid var(--border2);
+      border-radius: 8px; color: var(--text); font-family: 'Sarabun', sans-serif;
+      font-size: 0.875rem; padding: 0.5rem 0.75rem; outline: none;
+      transition: border-color 0.15s; width: 220px;
+    }
+    .settings-input:focus { border-color: var(--accent); }
+
+    /* ── RECOMMENDATION CARDS ── */
+    .reco-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1rem;
+    }
+    .reco-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 14px; overflow: hidden; transition: all 0.2s;
+      position: relative;
+    }
+    .reco-card:hover { border-color: var(--border2); transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
+    .reco-card.rank-1 { border-color: rgba(245,197,24,0.4); }
+    .reco-card.rank-2 { border-color: rgba(192,192,192,0.3); }
+    .reco-card.rank-3 { border-color: rgba(139,94,60,0.4); }
+    .reco-accent-bar { height: 3px; }
+    .rank-1 .reco-accent-bar { background: linear-gradient(90deg, var(--gold), transparent); }
+    .rank-2 .reco-accent-bar { background: linear-gradient(90deg, #c0c0c0, transparent); }
+    .rank-3 .reco-accent-bar { background: linear-gradient(90deg, #8B5E3C, transparent); }
+    .reco-body { padding: 1.25rem; }
+    .reco-rank {
+      display: flex; align-items: center; gap: 0.5rem;
+      margin-bottom: 0.6rem;
+    }
+    .rank-medal { font-size: 1.4rem; }
+    .rank-label { font-size: 0.72rem; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 0.06em; }
+    .reco-name { font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem; line-height: 1.3; }
+    .reco-tags { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-bottom: 1rem; }
+    .tag {
+      background: rgba(100,160,255,0.08); border: 1px solid var(--border);
+      border-radius: 6px; font-size: 0.7rem; font-weight: 500;
+      padding: 0.18rem 0.55rem; color: var(--text2);
+    }
+    .tag-area { color: var(--accent2); border-color: rgba(108,99,255,0.3); background: rgba(108,99,255,0.08); }
+    .tag-type { color: var(--accent); border-color: var(--badge-border); background: var(--badge-bg); }
+
+    .reco-score-row { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; }
+    .reco-score-num { font-size: 2.5rem; font-weight: 700; line-height: 1; }
+    .rank-1 .reco-score-num { color: var(--gold); }
+    .rank-2 .reco-score-num { color: #c0c0c0; }
+    .rank-3 .reco-score-num { color: #cd7f32; }
+    .reco-score-side { display: flex; flex-direction: column; gap: 0.1rem; }
+    .reco-stars { color: var(--gold); font-size: 0.85rem; letter-spacing: 0.03em; }
+    .reco-reviews { font-size: 0.72rem; color: var(--text3); }
+
+    .score-bars { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 1rem; }
+    .score-bar-row { display: flex; align-items: center; gap: 0.5rem; }
+    .score-bar-label { font-size: 0.68rem; color: var(--text2); min-width: 60px; }
+    .score-bar-track { flex: 1; height: 5px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; }
+    .score-bar-fill { height: 100%; border-radius: 3px; transition: width 0.8s ease; }
+    .score-bar-fill.s-rating { background: var(--gold); }
+    .score-bar-fill.s-group  { background: var(--accent); }
+    .score-bar-fill.s-price  { background: #7ee8a2; }
+    .score-bar-fill.s-travel { background: var(--accent2); }
+    .score-bar-fill.s-data   { background: #60b0f4; }
+    .score-bar-fill.s-unique { background: var(--warning); }
+    .score-bar-val { font-size: 0.68rem; color: var(--text3); min-width: 28px; text-align: right; }
+
+    .reco-justify {
+      font-size: 0.8rem; color: var(--text2); line-height: 1.55;
+      border-top: 1px solid var(--border); padding-top: 0.75rem; margin-bottom: 0.75rem;
+    }
+    .reco-link {
+      display: inline-flex; align-items: center; gap: 0.35rem;
+      font-size: 0.78rem; font-weight: 600; color: var(--accent);
+      text-decoration: none; transition: gap 0.15s;
+    }
+    .reco-link:hover { gap: 0.55rem; }
+
+    /* ── AI BOX ── */
+    .ai-box {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 1.25rem;
+    }
+    .ai-textarea {
+      width: 100%; background: var(--bg2); border: 1px solid var(--border2);
+      border-radius: 10px; color: var(--text); font-family: 'Sarabun', sans-serif;
+      font-size: 0.9rem; line-height: 1.6; padding: 0.75rem 1rem;
+      outline: none; resize: vertical; min-height: 88px; transition: border-color 0.15s;
+    }
+    .ai-textarea:focus { border-color: var(--accent); }
+    .ai-textarea::placeholder { color: var(--text3); }
+    .ai-actions { display: flex; align-items: center; gap: 0.75rem; margin-top: 0.75rem; }
+    .ai-key-row {
+      display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .ai-key-input {
+      flex: 1; min-width: 220px;
+      background: var(--bg2); border: 1px solid var(--border2);
+      border-radius: 8px; color: var(--text); font-family: monospace;
+      font-size: 0.82rem; padding: 0.5rem 0.75rem; outline: none;
+      transition: border-color 0.15s;
+    }
+    .ai-key-input:focus { border-color: var(--accent); }
+    .ai-key-input::placeholder { color: var(--text3); font-family: 'Sarabun', sans-serif; }
+    .ai-key-input.has-key { border-color: rgba(14,207,150,0.4); }
+    .ai-key-hint { font-size: 0.72rem; color: var(--text3); white-space: nowrap; }
+    .ai-hint { font-size: 0.75rem; color: var(--text3); }
+    .ai-response {
+      margin-top: 1rem; padding: 1rem; background: var(--bg2);
+      border: 1px solid var(--border); border-radius: 10px;
+      font-size: 0.875rem; line-height: 1.7; color: var(--text2);
+      display: none;
+      white-space: pre-wrap;
+    }
+    .ai-response.visible { display: block; }
+    .ai-loading { display: flex; align-items: center; gap: 0.5rem; color: var(--accent); font-size: 0.85rem; }
+    .ai-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: pulse 1.2s ease-in-out infinite; }
+    .ai-dot:nth-child(2) { animation-delay: 0.2s; }
+    .ai-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes pulse { 0%,100% { opacity: 0.3; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.2); } }
+
+    /* ── FILTERS ── */
+    .filters-bar {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 0.85rem 1rem; margin-bottom: 1.25rem;
+    }
+    .filters-row { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+    .filter-select {
+      background: var(--card2); border: 1px solid var(--border2);
+      border-radius: 8px; color: var(--text); font-family: 'Sarabun', sans-serif;
+      font-size: 0.82rem; padding: 0.45rem 0.75rem; outline: none; cursor: pointer;
+      transition: border-color 0.15s; appearance: none;
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+      background-repeat: no-repeat; background-position: right 0.5rem center; background-size: 1.2em;
+      padding-right: 2rem;
+    }
+    .filter-select:focus { border-color: var(--accent); }
+    .filter-select option { background: #111e33; }
+    .filters-summary { margin-top: 0.65rem; font-size: 0.75rem; color: var(--text3); }
+
+    /* ── RESTAURANT GRID ── */
+    .restaurant-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1rem;
+    }
+    .rest-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 1.1rem; transition: all 0.2s;
+      display: flex; flex-direction: column; gap: 0.6rem;
+    }
+    .rest-card:hover { border-color: var(--border2); transform: translateY(-2px); box-shadow: 0 6px 24px rgba(0,0,0,0.3); }
+    .rest-card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem; }
+    .rest-name { font-weight: 700; font-size: 0.98rem; line-height: 1.3; }
+    .rest-score-chip {
+      flex-shrink: 0; background: var(--badge-bg); border: 1px solid var(--badge-border);
+      border-radius: 8px; padding: 0.2rem 0.55rem; font-size: 0.72rem;
+      font-weight: 700; color: var(--accent); white-space: nowrap;
+    }
+    .rest-tags { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+    .rest-rating { display: flex; align-items: center; gap: 0.35rem; }
+    .rest-rating-num { font-weight: 700; font-size: 0.9rem; color: var(--gold); }
+    .rest-rating-stars { color: var(--gold); font-size: 0.75rem; }
+    .rest-rating-count { font-size: 0.72rem; color: var(--text3); }
+    .rest-meta { font-size: 0.78rem; color: var(--text2); display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .rest-meta-item { display: flex; align-items: center; gap: 0.2rem; }
+    .rest-link { margin-top: auto; }
+    .rest-link a {
+      font-size: 0.75rem; color: var(--accent2); text-decoration: none; font-weight: 500;
+      display: inline-flex; align-items: center; gap: 0.25rem;
+    }
+    .rest-link a:hover { color: var(--accent); }
+
+    /* ── EMPTY / ERROR / LOADING ── */
+    .empty-state {
+      grid-column: 1 / -1; text-align: center;
+      padding: 4rem 2rem; color: var(--text3);
+      border: 1px dashed var(--border); border-radius: 12px;
+    }
+    .empty-state-icon { font-size: 2.5rem; margin-bottom: 0.75rem; opacity: 0.5; }
+    .empty-state-text { font-size: 0.875rem; }
+    .spinner {
+      display: inline-block; width: 1.2rem; height: 1.2rem;
+      border: 2px solid var(--border); border-top-color: var(--accent);
+      border-radius: 50%; animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(7,12,26,0.85); backdrop-filter: blur(8px);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity 0.2s;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal {
+      background: var(--card2); border: 1px solid var(--border2);
+      border-radius: 16px; padding: 2rem; max-width: 420px; width: 90%;
+      transform: scale(0.95); transition: transform 0.2s;
+    }
+    .modal-overlay.open .modal { transform: scale(1); }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; }
+    .modal-title { font-size: 1.05rem; font-weight: 700; }
+    .modal-close { background: none; border: none; color: var(--text2); font-size: 1.4rem; cursor: pointer; line-height: 1; }
+    .modal-body { font-size: 0.875rem; color: var(--text2); }
+    .modal-progress { margin-top: 1.25rem; }
+    .modal-progress-bar { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+    .modal-progress-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 2s linear; }
+    .modal-status { margin-top: 0.75rem; font-size: 0.8rem; color: var(--text3); }
+
+    /* ── TOAST ── */
+    .toast-container { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 300; display: flex; flex-direction: column; gap: 0.5rem; }
+    .toast {
+      background: var(--card2); border: 1px solid var(--border2);
+      border-radius: 10px; padding: 0.75rem 1rem;
+      font-size: 0.82rem; color: var(--text); min-width: 220px;
+      display: flex; align-items: center; gap: 0.5rem;
+      animation: slideIn 0.25s ease; box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    }
+    .toast.success { border-color: rgba(14,207,150,0.4); }
+    .toast.error { border-color: rgba(255,83,112,0.4); }
+    @keyframes slideIn { from { transform: translateX(110%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+    /* ── LOAD MORE ── */
+    .load-more { text-align: center; margin-top: 1.5rem; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 640px) {
+      .container { padding: 1.25rem 1rem 3rem; }
+      .stats-grid { grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
+      .reco-grid { grid-template-columns: 1fr; }
+      .restaurant-grid { grid-template-columns: 1fr; }
+      .settings-row { gap: 1rem; }
+      .nav-date { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="nav-inner">
+    <span class="nav-brand">
+      <span class="nav-brand-dot"></span>
+      AI Restaurant Picker
+    </span>
+    <div class="nav-right">
+      <span class="nav-date" id="navDate"></span>
+      <button class="btn-icon" id="settingsToggleBtn" title="ตั้งค่า">⚙</button>
+      <button class="btn btn-secondary" id="refreshBtn" style="font-size:0.8rem;padding:0.4rem 0.8rem">
+        <span class="spinner" id="refreshSpinner" style="display:none"></span>
+        รีเฟรช
+      </button>
+    </div>
+  </div>
+</nav>
+
+<main class="container">
+
+  <!-- AREA STATS -->
+  <section class="section">
+    <div class="section-header">
+      <span class="section-title"><span class="section-title-icon">📊</span> สถิติร้านอาหาร</span>
+      <span class="badge" id="totalBadge">กำลังโหลด…</span>
+    </div>
+    <div class="stats-grid" id="statsGrid">
+      <div class="stat-card" style="grid-column:1/-1;padding:1.5rem;text-align:center;color:var(--text3)">
+        <div class="spinner" style="margin:0 auto 0.5rem"></div>
+        <div style="font-size:0.8rem">กำลังโหลดข้อมูล…</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section class="section">
+    <div class="settings-panel collapsed" id="settingsPanel">
+      <div class="settings-head" id="settingsHead">
+        <span class="settings-head-left">
+          <span>⚙</span> ตั้งค่าการแนะนำ
+          <span class="badge badge-dim" id="activeScenarioBadge">ปลอดภัย · 10 คน</span>
+        </span>
+        <span class="settings-chevron">▾</span>
+      </div>
+      <div class="settings-body">
+        <div class="settings-row">
+          <div class="settings-group">
+            <span class="settings-label">Scenario</span>
+            <div class="scenario-btns">
+              <button class="scenario-btn active" data-s="ปลอดภัย">🛡 ปลอดภัยสูงสุด</button>
+              <button class="scenario-btn" data-s="ประหยัด">💰 ประหยัด</button>
+              <button class="scenario-btn" data-s="รีบกิน">⚡ รีบกิน</button>
+              <button class="scenario-btn" data-s="คุยงาน">💼 คุยงาน</button>
+            </div>
+          </div>
+          <div class="settings-group">
+            <span class="settings-label">จำนวนคน</span>
+            <div class="group-stepper">
+              <button id="grpDown" onclick="changeGroup(-1)">−</button>
+              <span class="group-size-val" id="grpVal">10</span>
+              <button id="grpUp" onclick="changeGroup(1)">+</button>
+            </div>
+          </div>
+          <div class="settings-group">
+            <span class="settings-label">Scrape Secret (admin)</span>
+            <input class="settings-input" type="password" id="scrapeSecretInput" placeholder="ใส่รหัสสำหรับ Scrape">
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RECOMMENDATIONS -->
+  <section class="section">
+    <div class="section-header">
+      <span class="section-title"><span class="section-title-icon">🏆</span> แนะนำร้านอาหาร</span>
+      <button class="btn btn-accent" id="reRankBtn" style="font-size:0.8rem;padding:0.4rem 0.9rem">คำนวณใหม่</button>
+    </div>
+    <div class="reco-grid" id="recoGrid">
+      <div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--text3);font-size:0.875rem">
+        กำลังโหลดข้อมูล…
+      </div>
+    </div>
+  </section>
+
+  <!-- AI ASK BOX -->
+  <section class="section">
+    <div class="section-header">
+      <span class="section-title"><span class="section-title-icon">🤖</span> ถาม AI เกี่ยวกับร้านอาหาร</span>
+    </div>
+    <div class="ai-box">
+      <div class="ai-key-row">
+        <input class="ai-key-input" type="password" id="anthropicKeyInput"
+          placeholder="Anthropic API Key (sk-ant-…)" autocomplete="off" spellcheck="false">
+        <span class="ai-key-hint">เก็บใน browser เท่านั้น ไม่ได้บันทึกที่อื่น</span>
+      </div>
+      <textarea class="ai-textarea" id="aiTextarea" placeholder="เช่น: ร้านไหนในทองหล่อเหมาะสำหรับคุยงานบ้าง? หรือ แนะนำร้านปิ้งย่างราคาไม่แพงหน่อย…" rows="3"></textarea>
+      <div class="ai-actions">
+        <button class="btn btn-accent" id="askBtn">ถาม AI</button>
+        <span class="ai-hint">Ctrl+Enter เพื่อส่ง · ข้อมูลร้านจาก Google Sheets จะถูกส่งให้ AI ประกอบการตอบ</span>
+      </div>
+      <div class="ai-response" id="aiResponse"></div>
+    </div>
+  </section>
+
+  <!-- RESTAURANT LIST -->
+  <section class="section">
+    <div class="section-header">
+      <span class="section-title"><span class="section-title-icon">🍜</span> รายการร้านอาหาร</span>
+      <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+        <button class="btn btn-outline" id="scrapeMoreBtn">+ ดึงข้อมูลเพิ่ม</button>
+        <button class="btn btn-secondary" id="scrapeBtn">🔄 Scrape ใหม่</button>
+      </div>
+    </div>
+
+    <div class="filters-bar">
+      <div class="filters-row">
+        <select class="filter-select" id="fType">
+          <option value="">ประเภทอาหารทั้งหมด</option>
+          <option value="ญี่ปุ่น">🇯🇵 ญี่ปุ่น</option>
+          <option value="เกาหลี">🇰🇷 เกาหลี</option>
+          <option value="จีน">🇨🇳 จีน</option>
+          <option value="ไทย">🇹🇭 ไทย</option>
+          <option value="อิตาเลียน">🇮🇹 อิตาเลียน</option>
+          <option value="ปิ้งย่าง">🔥 ปิ้งย่าง</option>
+          <option value="BBQ">🥩 BBQ</option>
+        </select>
+        <select class="filter-select" id="fScenario">
+          <option value="">Scenario ทั้งหมด</option>
+          <option value="คุยงาน">💼 เหมาะคุยงาน</option>
+          <option value="รีบกิน">⚡ กินเร็ว</option>
+          <option value="ประหยัด">💰 ราคาถูก</option>
+        </select>
+        <select class="filter-select" id="fArea">
+          <option value="">ย่านทั้งหมด</option>
+          <option value="อารีย์">อารีย์</option>
+          <option value="ทองหล่อ">ทองหล่อ</option>
+          <option value="พร้อมพงศ์">พร้อมพงศ์</option>
+          <option value="สยาม">สยาม</option>
+          <option value="อโศก">อโศก</option>
+        </select>
+        <select class="filter-select" id="fPrice">
+          <option value="">ราคาทั้งหมด</option>
+          <option value="$">$ ถูก</option>
+          <option value="$$">$$ ปานกลาง</option>
+          <option value="$$$">$$$ แพง</option>
+          <option value="$$$$">$$$$ แพงมาก</option>
+        </select>
+      </div>
+      <div class="filters-summary" id="filterSummary"></div>
+    </div>
+
+    <div class="restaurant-grid" id="restaurantGrid">
+      <div class="empty-state">
+        <div class="spinner" style="margin:0 auto 0.75rem"></div>
+        <div class="empty-state-text">กำลังโหลด…</div>
+      </div>
+    </div>
+
+    <div class="load-more" id="loadMoreBtn" style="display:none">
+      <button class="btn btn-outline" onclick="showMore()">แสดงเพิ่มเติม</button>
+    </div>
+  </section>
+
+</main>
+
+<!-- SCRAPE MODAL -->
+<div class="modal-overlay" id="scrapeModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modalTitle">กำลัง Scrape ข้อมูล…</span>
+      <button class="modal-close" id="modalCloseBtn">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="modalMsg">กำลังดึงข้อมูลร้านอาหารจาก Google Maps ในย่าน อารีย์, ทองหล่อ, พร้อมพงศ์, สยาม, อโศก…</div>
+      <div class="modal-progress" id="modalProgress">
+        <div class="modal-progress-bar"><div class="modal-progress-fill" id="modalFill" style="width:5%"></div></div>
+        <div class="modal-status" id="modalStatus">กำลังเริ่มต้น… อาจใช้เวลา 3–5 นาที</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOASTS -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+'use strict';
+
+// ── STATE ──────────────────────────────────────────────────────────────────
+let allRestaurants = [];
+let filteredRestaurants = [];
+let displayCount = 24;
+let state = {
+  scenario: localStorage.getItem('scenario') || 'ปลอดภัย',
+  groupSize: parseInt(localStorage.getItem('groupSize') || '10'),
+};
+
+// ── UTILS ──────────────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function stars(rating, max = 5) {
+  const n = Math.min(max, Math.max(0, Math.round(Number(rating) || 0)));
+  return '★'.repeat(n) + '☆'.repeat(max - n);
+}
+
+function fmtNum(n) {
+  const num = parseInt(n);
+  if (!num || isNaN(num)) return '—';
+  if (num >= 1000) return (num / 1000).toFixed(1) + 'k';
+  return num.toLocaleString('th-TH');
+}
+
+// ── SCORING ────────────────────────────────────────────────────────────────
+const WEIGHTS = { rating: 0.25, group: 0.20, price: 0.15, travel: 0.15, data: 0.15, unique: 0.10 };
+
+function priceScore(p) {
+  if (!p) return 50;
+  const t = p.trim();
+  if (/^\$+$|^฿+$/.test(t)) {
+    const l = t.replace(/[^$฿]/g, '').length;
+    return [100, 75, 50, 25][Math.min(l - 1, 3)];
+  }
+  const nums = t.match(/\d+/g);
+  if (nums) {
+    const avg = nums.map(Number).reduce((a,b)=>a+b,0) / nums.length;
+    if (avg < 150) return 100; if (avg < 300) return 85;
+    if (avg < 500) return 70;  if (avg < 800) return 50;
+    if (avg < 1200) return 35; return 20;
+  }
+  const low = ['inexpensive','cheap','ถูก'];
+  if (low.some(x => t.toLowerCase().includes(x))) return 90;
+  return 50;
+}
+
+function groupScore(r) {
+  const v = (r['เหมาะกับกลุ่มหรือไม่'] || '').toLowerCase();
+  if (v.includes('ใช่') || v.includes('yes') || v === 'true') return 100;
+  if (v.includes('ไม่') || v.includes('no') || v === 'false') return 25;
+  const type = (r['ประเภทอาหาร'] || '').toLowerCase();
+  const hi = ['bbq','ปิ้งย่าง','shabu','หมูกระทะ','korean','เกาหลี','hot pot','suki','ซูกิ','บุฟเฟ่','buffet'];
+  if (hi.some(t => type.includes(t))) return 90;
+  const mid = ['thai','ไทย','japanese','ญี่ปุ่น','chinese','จีน','seafood','อาหารทะเล','italian','อิตาเลียน'];
+  if (mid.some(t => type.includes(t))) return 72;
+  return 55;
+}
+
+function dataScore(reviewCount) {
+  const n = parseInt(reviewCount) || 0;
+  if (n === 0) return 15;
+  return Math.min(100, (Math.log10(n + 1) / Math.log10(10001)) * 100);
+}
+
+function travelScore(r) {
+  let s = 30;
+  if ((r['ที่ตั้ง'] || '').length > 10) s += 35;
+  if ((r['หมายเหตุการเดินทาง'] || '').length > 5) s += 20;
+  if ((r['ลิงก์แหล่งข้อมูล'] || '').length > 5) s += 15;
+  return Math.min(100, s);
+}
+
+function uniqueScore(r, all) {
+  const type = r['ประเภทอาหาร'] || '';
+  if (!type || !all.length) return 55;
+  const sameType = all.filter(x => x['ประเภทอาหาร'] === type).length;
+  const freq = sameType / all.length;
+  return Math.max(20, Math.min(100, (1 - freq) * 120 + 15));
+}
+
+function scoreRestaurant(r, all, scenario) {
+  const rating = parseFloat(r['คะแนนรีวิว']) || 0;
+  let s = {
+    rating: (rating / 5) * 100,
+    group: groupScore(r),
+    price: priceScore(r['ช่วงราคา']),
+    travel: travelScore(r),
+    data: dataScore(r['จำนวนรีวิว']),
+    unique: uniqueScore(r, all),
+  };
+
+  // Scenario boosts
+  if (scenario === 'ปลอดภัย') {
+    s.rating = Math.min(100, s.rating * 1.3);
+    s.data   = Math.min(100, s.data   * 1.3);
+  } else if (scenario === 'ประหยัด') {
+    s.price  = Math.min(100, s.price  * 1.5);
+  } else if (scenario === 'รีบกิน') {
+    s.travel = Math.min(100, s.travel * 1.4);
+    s.rating = Math.min(100, s.rating * 0.9);
+  } else if (scenario === 'คุยงาน') {
+    const type = (r['ประเภทอาหาร'] || '').toLowerCase();
+    const quietTypes = ['cafe','คาเฟ่','japanese','ญี่ปุ่น','italian','อิตาเลียน','western','ตะวันตก','steakhouse'];
+    if (quietTypes.some(t => type.includes(t))) {
+      s.rating = Math.min(100, s.rating * 1.2);
+    }
+  }
+
+  const total = Object.entries(WEIGHTS).reduce((sum, [k, w]) => sum + (s[k] || 0) * w, 0);
+  return { total: Math.min(100, Math.round(total)), breakdown: s };
+}
+
+function justification(r, scenario, score) {
+  const name = r['ชื่อร้าน'] || 'ร้านนี้';
+  const area = r['พื้นที่'] || '';
+  const type = r['ประเภทอาหาร'] || 'อาหาร';
+  const rating = r['คะแนนรีวิว'] || '—';
+  const reviews = fmtNum(r['จำนวนรีวิว']);
+  const price = r['ช่วงราคา'] || '—';
+
+  const parts = [
+    `${name}${area ? ` ย่าน${area}` : ''} เป็นร้าน${type}`,
+    rating !== '—' ? `คะแนนรีวิว ${rating}/5 (${reviews} รีวิว)` : null,
+    price !== '—' ? `ช่วงราคา ${price}` : null,
+  ].filter(Boolean).join(' | ');
+
+  const scenarioNote = {
+    'ปลอดภัย': 'คะแนนสูงและมีรีวิวจำนวนมาก เชื่อถือได้',
+    'ประหยัด': 'ราคาประหยัด เหมาะสำหรับทีมขนาดใหญ่',
+    'รีบกิน': 'เดินทางสะดวก เข้าถึงง่าย บริการรวดเร็ว',
+    'คุยงาน': 'บรรยากาศเหมาะสำหรับการประชุมและคุยงาน',
+  }[scenario] || '';
+
+  return `${parts}${scenarioNote ? ` — ${scenarioNote}` : ''}`;
+}
+
+// ── RENDER RECOMMENDATIONS ──────────────────────────────────────────────────
+function renderRecommendations() {
+  const grid = document.getElementById('recoGrid');
+  if (!allRestaurants.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--text3);font-size:0.875rem">ยังไม่มีข้อมูลร้านอาหาร กรุณา Scrape ข้อมูลก่อน</div>';
+    return;
+  }
+
+  const scored = allRestaurants.map(r => ({
+    r,
+    ...scoreRestaurant(r, allRestaurants, state.scenario),
+  })).sort((a, b) => b.total - a.total).slice(0, 3);
+
+  const medals = ['🥇','🥈','🥉'];
+  const rankLabels = ['อันดับ 1 แนะนำ','อันดับ 2','อันดับ 3'];
+
+  grid.innerHTML = scored.map((item, i) => {
+    const { r, total, breakdown } = item;
+    const rank = i + 1;
+    const rating = parseFloat(r['คะแนนรีวิว']) || 0;
+    const link = r['ลิงก์แหล่งข้อมูล'] ? `<a class="reco-link" href="${esc(r['ลิงก์แหล่งข้อมูล'])}" target="_blank" rel="noopener">Google Maps →</a>` : '';
+
+    const barRows = [
+      ['s-rating', 'คะแนน 25%', breakdown.rating],
+      ['s-group',  'กลุ่ม 20%',  breakdown.group],
+      ['s-price',  'ราคา 15%',  breakdown.price],
+      ['s-travel', 'เดินทาง 15%', breakdown.travel],
+      ['s-data',   'ข้อมูล 15%', breakdown.data],
+      ['s-unique', 'เอกลักษณ์ 10%', breakdown.unique],
+    ].map(([cls, lbl, val]) => `
+      <div class="score-bar-row">
+        <span class="score-bar-label">${lbl}</span>
+        <div class="score-bar-track"><div class="score-bar-fill ${cls}" style="width:${Math.round(val)}%"></div></div>
+        <span class="score-bar-val">${Math.round(val)}</span>
+      </div>`).join('');
+
+    const tags = [
+      r['พื้นที่'] ? `<span class="tag tag-area">${esc(r['พื้นที่'])}</span>` : '',
+      r['ประเภทอาหาร'] ? `<span class="tag tag-type">${esc(r['ประเภทอาหาร'])}</span>` : '',
+      r['ช่วงราคา'] ? `<span class="tag">${esc(r['ช่วงราคา'])}</span>` : '',
+    ].filter(Boolean).join('');
+
+    return `
+<div class="reco-card rank-${rank}">
+  <div class="reco-accent-bar"></div>
+  <div class="reco-body">
+    <div class="reco-rank">
+      <span class="rank-medal">${medals[i]}</span>
+      <span class="rank-label">${rankLabels[i]}</span>
+    </div>
+    <div class="reco-name">${esc(r['ชื่อร้าน'] || '—')}</div>
+    <div class="reco-tags">${tags}</div>
+    <div class="reco-score-row">
+      <span class="reco-score-num">${total}</span>
+      <div class="reco-score-side">
+        <div class="reco-stars">${stars(rating)}</div>
+        <div class="reco-reviews">${rating || '—'} · ${fmtNum(r['จำนวนรีวิว'])} รีวิว</div>
+        <div style="font-size:0.7rem;color:var(--text3);margin-top:0.1rem">คะแนน / 100</div>
+      </div>
+    </div>
+    <div class="score-bars">${barRows}</div>
+    <div class="reco-justify">${esc(justification(r, state.scenario, total))}</div>
+    ${link}
+  </div>
+</div>`;
+  }).join('');
+}
+
+// ── RENDER RESTAURANT LIST ──────────────────────────────────────────────────
+function inferScenario(r) {
+  const type = (r['ประเภทอาหาร'] || '').toLowerCase();
+  const notes = (r['หมายเหตุเพิ่มเติม'] || '').toLowerCase();
+  const travel = (r['หมายเหตุการเดินทาง'] || '').toLowerCase();
+  const all = type + notes + travel;
+
+  const s = [];
+  if (['cafe','คาเฟ่','japanese','ญี่ปุ่น','italian','อิตาเลียน'].some(t => all.includes(t))) s.push('คุยงาน');
+  const ps = priceScore(r['ช่วงราคา']);
+  if (ps >= 80) s.push('ประหยัด');
+  if (travelScore(r) >= 70) s.push('รีบกิน');
+  return s;
+}
+
+function applyFilters() {
+  const fType     = document.getElementById('fType').value;
+  const fScenario = document.getElementById('fScenario').value;
+  const fArea     = document.getElementById('fArea').value;
+  const fPrice    = document.getElementById('fPrice').value;
+
+  filteredRestaurants = allRestaurants.filter(r => {
+    if (fArea && r['พื้นที่'] !== fArea) return false;
+    if (fType && !(r['ประเภทอาหาร'] || '').toLowerCase().includes(fType.toLowerCase())) return false;
+    if (fPrice) {
+      const p = (r['ช่วงราคา'] || '').trim();
+      if (!p.startsWith(fPrice)) return false;
+    }
+    if (fScenario) {
+      const scenarios = inferScenario(r);
+      if (!scenarios.includes(fScenario)) return false;
+    }
+    return true;
+  });
+
+  displayCount = 24;
+  renderRestaurantGrid();
+  document.getElementById('filterSummary').textContent =
+    `แสดง ${Math.min(displayCount, filteredRestaurants.length)} / ${filteredRestaurants.length} ร้าน (จากทั้งหมด ${allRestaurants.length} ร้าน)`;
+}
+
+function showMore() {
+  displayCount += 24;
+  renderRestaurantGrid();
+}
+
+function renderRestaurantGrid() {
+  const grid = document.getElementById('restaurantGrid');
+  const slice = filteredRestaurants.slice(0, displayCount);
+
+  if (!slice.length) {
+    grid.innerHTML = `<div class="empty-state">
+      <div class="empty-state-icon">🔍</div>
+      <div class="empty-state-text">ไม่พบร้านอาหารที่ตรงกับเงื่อนไข</div>
+    </div>`;
+    document.getElementById('loadMoreBtn').style.display = 'none';
+    return;
+  }
+
+  // Sort by score
+  const withScore = slice.map(r => ({ r, s: scoreRestaurant(r, allRestaurants, state.scenario) }))
+    .sort((a, b) => b.s.total - a.s.total);
+
+  grid.innerHTML = withScore.map(({ r, s }) => {
+    const rating = parseFloat(r['คะแนนรีวิว']) || 0;
+    const tags = [
+      r['พื้นที่'] ? `<span class="tag tag-area">${esc(r['พื้นที่'])}</span>` : '',
+      r['ประเภทอาหาร'] ? `<span class="tag tag-type">${esc(r['ประเภทอาหาร'])}</span>` : '',
+      r['ช่วงราคา'] ? `<span class="tag">${esc(r['ช่วงราคา'])}</span>` : '',
+    ].filter(Boolean).join('');
+
+    const link = r['ลิงก์แหล่งข้อมูล']
+      ? `<div class="rest-link"><a href="${esc(r['ลิงก์แหล่งข้อมูล'])}" target="_blank" rel="noopener">ดูบน Google Maps →</a></div>`
+      : '';
+
+    const hours = r['เวลาเปิดปิด'] ? `<span class="rest-meta-item">🕐 ${esc(r['เวลาเปิดปิด'].substring(0, 40))}</span>` : '';
+    const addr  = r['ที่ตั้ง'] ? `<span class="rest-meta-item">📍 ${esc(r['ที่ตั้ง'].substring(0, 40))}</span>` : '';
+
+    return `
+<div class="rest-card">
+  <div class="rest-card-header">
+    <div class="rest-name">${esc(r['ชื่อร้าน'] || '—')}</div>
+    <div class="rest-score-chip">${s.total}</div>
+  </div>
+  <div class="rest-tags">${tags}</div>
+  <div class="rest-rating">
+    <span class="rest-rating-num">${rating || '—'}</span>
+    <span class="rest-rating-stars">${stars(rating)}</span>
+    <span class="rest-rating-count">(${fmtNum(r['จำนวนรีวิว'])})</span>
+  </div>
+  <div class="rest-meta">${hours}${addr}</div>
+  ${link}
+</div>`;
+  }).join('');
+
+  document.getElementById('loadMoreBtn').style.display =
+    filteredRestaurants.length > displayCount ? 'block' : 'none';
+}
+
+// ── AREA STATS ─────────────────────────────────────────────────────────────
+function renderStats(breakdown, total) {
+  const areas = ['อารีย์','ทองหล่อ','พร้อมพงศ์','สยาม','อโศก'];
+  const max = Math.max(...Object.values(breakdown), 1);
+  document.getElementById('totalBadge').textContent = `${total} ร้านทั้งหมด`;
+
+  document.getElementById('statsGrid').innerHTML = areas.map(area => {
+    const count = breakdown[area] || 0;
+    const pct = Math.round((count / max) * 100);
+    const emoji = { อารีย์:'🌿', ทองหล่อ:'✨', พร้อมพงศ์:'🛍', สยาม:'🏙', อโศก:'🚇' }[area] || '📍';
+    return `
+<div class="stat-card">
+  <span class="stat-area">${emoji} ${area}</span>
+  <span class="stat-count">${count}</span>
+  <span class="stat-label">ร้านอาหาร</span>
+  <div class="stat-bar"><div class="stat-bar-fill" style="width:${pct}%"></div></div>
+</div>`;
+  }).join('');
+}
+
+// ── DATA LOADING ───────────────────────────────────────────────────────────
+async function loadData(quiet = false) {
+  if (!quiet) {
+    const sp = document.getElementById('refreshSpinner');
+    if (sp) sp.style.display = 'inline-block';
+  }
+  try {
+    const res = await fetch('/all-restaurants');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    allRestaurants = data.restaurants || [];
+    renderStats(data.breakdown || {}, data.total || 0);
+    applyFilters();
+    renderRecommendations();
+    if (!quiet) showToast('โหลดข้อมูลสำเร็จ', 'success');
+  } catch (err) {
+    showToast('โหลดข้อมูลไม่สำเร็จ: ' + err.message, 'error');
+    document.getElementById('statsGrid').innerHTML =
+      `<div style="grid-column:1/-1;padding:1rem;color:var(--danger);font-size:0.85rem">โหลดข้อมูลไม่สำเร็จ: ${esc(err.message)}</div>`;
+  } finally {
+    const sp = document.getElementById('refreshSpinner');
+    if (sp) sp.style.display = 'none';
+  }
+}
+
+// ── SCRAPE ─────────────────────────────────────────────────────────────────
+let scrapePoller = null;
+
+async function triggerScrape() {
+  const secret = document.getElementById('scrapeSecretInput').value ||
+                 localStorage.getItem('scrapeSecret') || '';
+
+  openModal('กำลัง Scrape ข้อมูล…', 'กำลังส่งคำสั่ง Scrape ไปยัง server…');
+
+  try {
+    const res = await fetch('/api/scrape', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-scrape-secret': secret },
+    });
+    const data = await res.json();
+
+    // 409 = already running
+    if (res.status === 409) {
+      document.getElementById('modalMsg').textContent = 'กำลัง Scrape อยู่แล้ว กำลังตรวจสอบสถานะ…';
+      pollScrapeStatus();
+      return;
+    }
+
+    if (!res.ok && res.status !== 202) {
+      throw new Error(data.error || `HTTP ${res.status}`);
+    }
+
+    if (data.status === 'running' || res.status === 202) {
+      // Local dev: fire-and-forget, poll for completion
+      document.getElementById('modalMsg').textContent =
+        'กำลังดึงข้อมูลจาก Google Maps ในย่าน อารีย์, ทองหล่อ, พร้อมพงศ์, สยาม, อโศก…';
+      simulateProgress();
+      pollScrapeStatus();
+    } else if (data.success && data.totalRestaurants != null) {
+      // Vercel production: synchronous response
+      closeModal();
+      showToast(`Scrape สำเร็จ! ได้ ${data.totalRestaurants} ร้าน`, 'success');
+      await loadData(true);
+    } else {
+      throw new Error(data.error || 'ไม่ทราบสถานะ');
+    }
+  } catch (err) {
+    closeModal();
+    showToast('Scrape ไม่สำเร็จ: ' + err.message, 'error');
+  }
+}
+
+function pollScrapeStatus() {
+  if (scrapePoller) clearInterval(scrapePoller);
+  const elapsed = { v: 0 };
+
+  scrapePoller = setInterval(async () => {
+    elapsed.v += 8;
+    try {
+      const res = await fetch('/api/scrape-status');
+      const data = await res.json();
+
+      if (data.status === 'done') {
+        clearInterval(scrapePoller);
+        scrapePoller = null;
+        closeModal();
+        showToast(`Scrape สำเร็จ! ได้ ${data.total} ร้าน`, 'success');
+        await loadData(true);
+      } else if (data.status === 'error') {
+        clearInterval(scrapePoller);
+        scrapePoller = null;
+        closeModal();
+        showToast('Scrape ไม่สำเร็จ: ' + (data.error || 'unknown error'), 'error');
+      } else {
+        // still running — update modal status text
+        const secs = data.elapsed || elapsed.v;
+        const mins = Math.floor(secs / 60);
+        const s = secs % 60;
+        const timeStr = mins > 0 ? `${mins} นาที ${s} วินาที` : `${secs} วินาที`;
+        document.getElementById('modalStatus').textContent =
+          `กำลังดึงข้อมูล… (ผ่านมา ${timeStr}) อาจใช้เวลา 3–5 นาที`;
+      }
+    } catch (err) {
+      // network hiccup — keep polling
+    }
+  }, 8000);
+}
+
+let progressInterval;
+function simulateProgress() {
+  let pct = 5;
+  const fill = document.getElementById('modalFill');
+  const status = document.getElementById('modalStatus');
+  const msgs = [
+    'กำลังเชื่อมต่อ Apify…',
+    'กำลังดึงข้อมูลย่านอารีย์…',
+    'กำลังดึงข้อมูลย่านทองหล่อ…',
+    'กำลังดึงข้อมูลย่านพร้อมพงศ์…',
+    'กำลังดึงข้อมูลย่านสยาม…',
+    'กำลังดึงข้อมูลย่านอโศก…',
+    'กำลังบันทึกลง Google Sheets…',
+  ];
+  let msgIdx = 0;
+  progressInterval = setInterval(() => {
+    pct = Math.min(90, pct + Math.random() * 8);
+    if (fill) fill.style.width = pct + '%';
+    if (pct > msgIdx * 13 && msgIdx < msgs.length) {
+      if (status) status.textContent = msgs[msgIdx++];
+    }
+  }, 4000);
+}
+
+function openModal(title, msg) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalMsg').textContent = msg;
+  document.getElementById('modalFill').style.width = '5%';
+  document.getElementById('scrapeModal').classList.add('open');
+}
+
+function closeModal() {
+  clearInterval(progressInterval);
+  document.getElementById('scrapeModal').classList.remove('open');
+}
+
+// ── AI ASK ─────────────────────────────────────────────────────────────────
+async function askAI() {
+  const question = document.getElementById('aiTextarea').value.trim();
+  if (!question) return;
+
+  const apiKey = document.getElementById('anthropicKeyInput').value.trim() ||
+                 localStorage.getItem('anthropicKey') || '';
+
+  const btn = document.getElementById('askBtn');
+  const resp = document.getElementById('aiResponse');
+
+  btn.disabled = true;
+  resp.className = 'ai-response visible';
+  resp.innerHTML = `<div class="ai-loading"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div> กำลังคิด…</div>`;
+
+  try {
+    const res = await fetch('/api/ask', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question, restaurants: allRestaurants, apiKey }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    resp.textContent = data.answer || '(ไม่มีคำตอบ)';
+  } catch (err) {
+    resp.textContent = 'เกิดข้อผิดพลาด: ' + err.message;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// ── TOAST ──────────────────────────────────────────────────────────────────
+function showToast(msg, type = 'info') {
+  const container = document.getElementById('toastContainer');
+  const icon = { success:'✓', error:'✕', info:'ℹ' }[type] || 'ℹ';
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span>${icon}</span><span>${esc(msg)}</span>`;
+  container.appendChild(el);
+  setTimeout(() => el.remove(), 4000);
+}
+
+// ── SETTINGS ───────────────────────────────────────────────────────────────
+function changeGroup(delta) {
+  state.groupSize = Math.max(8, Math.min(12, state.groupSize + delta));
+  document.getElementById('grpVal').textContent = state.groupSize;
+  document.getElementById('grpDown').disabled = state.groupSize <= 8;
+  document.getElementById('grpUp').disabled   = state.groupSize >= 12;
+  localStorage.setItem('groupSize', state.groupSize);
+  updateScenarioBadge();
+}
+
+function updateScenarioBadge() {
+  document.getElementById('activeScenarioBadge').textContent =
+    `${state.scenario} · ${state.groupSize} คน`;
+}
+
+// ── INIT ───────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  // Date
+  document.getElementById('navDate').textContent = new Date().toLocaleDateString('th-TH', {
+    timeZone: 'Asia/Bangkok', year: 'numeric', month: 'short', day: 'numeric'
+  });
+
+  // Settings state
+  document.getElementById('grpVal').textContent = state.groupSize;
+  document.getElementById('grpDown').disabled = state.groupSize <= 8;
+  document.getElementById('grpUp').disabled   = state.groupSize >= 12;
+
+  // Scenario buttons
+  document.querySelectorAll('.scenario-btn').forEach(btn => {
+    if (btn.dataset.s === state.scenario) btn.classList.add('active');
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.scenario-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.scenario = btn.dataset.s;
+      localStorage.setItem('scenario', state.scenario);
+      updateScenarioBadge();
+      renderRecommendations();
+      renderRestaurantGrid();
+    });
+  });
+
+  // Settings toggle
+  document.getElementById('settingsHead').addEventListener('click', () => {
+    document.getElementById('settingsPanel').classList.toggle('collapsed');
+  });
+  document.getElementById('settingsToggleBtn').addEventListener('click', () => {
+    document.getElementById('settingsPanel').classList.toggle('collapsed');
+    document.getElementById('settingsPanel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
+
+  // Scrape secret persist
+  const savedSecret = localStorage.getItem('scrapeSecret');
+  if (savedSecret) document.getElementById('scrapeSecretInput').value = savedSecret;
+  document.getElementById('scrapeSecretInput').addEventListener('input', e => {
+    localStorage.setItem('scrapeSecret', e.target.value);
+  });
+
+  // Buttons
+  document.getElementById('refreshBtn').addEventListener('click', () => loadData());
+  document.getElementById('scrapeBtn').addEventListener('click', triggerScrape);
+  document.getElementById('scrapeMoreBtn').addEventListener('click', triggerScrape);
+  document.getElementById('reRankBtn').addEventListener('click', () => {
+    renderRecommendations();
+    renderRestaurantGrid();
+    showToast('คำนวณคะแนนใหม่แล้ว', 'success');
+  });
+  // Anthropic key — restore + persist
+  const savedKey = localStorage.getItem('anthropicKey');
+  const keyInput = document.getElementById('anthropicKeyInput');
+  if (savedKey) {
+    keyInput.value = savedKey;
+    keyInput.classList.add('has-key');
+  }
+  keyInput.addEventListener('input', () => {
+    const v = keyInput.value.trim();
+    if (v) { localStorage.setItem('anthropicKey', v); keyInput.classList.add('has-key'); }
+    else   { localStorage.removeItem('anthropicKey'); keyInput.classList.remove('has-key'); }
+  });
+
+  document.getElementById('askBtn').addEventListener('click', askAI);
+  document.getElementById('aiTextarea').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && e.ctrlKey) askAI();
+  });
+  document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
+
+  // Filters
+  ['fType','fScenario','fArea','fPrice'].forEach(id => {
+    document.getElementById(id).addEventListener('change', applyFilters);
+  });
+
+  updateScenarioBadge();
+  loadData(true);
+});
+</script>
+
+</body>
+</html>

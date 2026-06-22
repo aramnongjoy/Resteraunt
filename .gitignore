@@ -33,8 +33,8 @@ yarn-error.log*
 # vercel
 .vercel
 
-# generated static output
-/public
+# generated static output (public/ is now tracked — static frontend lives here)
+# /public
 
 # secrets
 .env

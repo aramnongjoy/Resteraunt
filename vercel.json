@@ -1,6 +1,7 @@
 {
   "framework": null,
   "installCommand": "bun install",
+  "outputDirectory": "public",
   "cleanUrls": true,
   "rewrites": [
     { "source": "/restaurants", "destination": "/api/restaurants" },
